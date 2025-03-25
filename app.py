@@ -2,9 +2,27 @@ import os
 import subprocess
 import streamlit as st
 
-# Clone the private repository using subprocess to avoid gitpython issues
-if not os.path.exists('AIpersona'):
-    subprocess.run(['git', 'clone', f'https://{os.getenv("GITHUB_TOKEN")}@github.com/vlsathvika/AIpersona.git', 'AIpersona'], check=True)
+repo_path = 'AIpersona'
 
-# Run the entire code_1.py script
-exec(open('AIpersona/persona_s.py').read())
+# Clone the repository only if it doesn't exist
+if not os.path.exists(repo_path):
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        repo_url = f"https://{token}@github.com/vlsathvika/AIpersona.git"
+        try:
+            subprocess.run(['git', 'clone', repo_url, repo_path], check=True)
+            st.success("Repository cloned successfully!")
+        except subprocess.CalledProcessError as e:
+            st.error(f"Failed to clone repository: {e}")
+    else:
+        st.error("GITHUB_TOKEN is missing. Please add it to Streamlit Secrets.")
+
+# Execute the script
+script_path = os.path.join(repo_path, 'persona_s.py')
+if os.path.exists(script_path):
+    try:
+        exec(open(script_path).read())
+    except Exception as e:
+        st.error(f"Error while running the script: {e}")
+else:
+    st.error(f"{script_path} not found.")
